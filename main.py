@@ -110,7 +110,7 @@ class Game:
             clock.tick(fps)
 
             # Завершение игры при достижении 50 попаданий или промахов
-            if hits >= 10 or misses >= 10:
+            if hits >= 50 or misses >= 50:
                 self.running = False
 
         # Показ сообщения об окончании игры

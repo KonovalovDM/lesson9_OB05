@@ -21,12 +21,9 @@ rocket_speed = 5
 # Параметры мяча
 ball_radius = 8
 ball_x = SCREEN_WIDTH // 2
-ball_y = rocket_y - ball_radius
-
-# Скорость движения мяча можно изменить
-ball_speed_x = random.choice([-1, 1]) * 0.25
-ball_speed_y = random.choice([-1, 1]) * 0.25
-
+ball_y = rocket_y - ball_radius * 2
+ball_speed_x = random.choice([-1, 1]) * 5  # Скорость мяча
+ball_speed_y = random.choice([-1, 1]) * 5
 
 # Цвет фона
 color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
@@ -43,7 +40,6 @@ misses = 0
 font = pygame.font.Font(None, 36)
 
 # Основной цикл игры до 50 промахов или принудительного выхода
-
 running = True
 while running:
     screen.fill(color)
@@ -51,41 +47,42 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-# Движение ракетки
+    # Движение ракетки
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT] and rocket_x > 0:
         rocket_x -= rocket_speed
     if keys[pygame.K_RIGHT] and rocket_x < SCREEN_WIDTH - rocket_width:
         rocket_x += rocket_speed
 
-# Движение мяча
-ball_x = ball_x + ball_speed_x
-ball_y = ball_y + ball_speed_y
+        # Движение мяча
+    ball_x += ball_speed_x
+    ball_y += ball_speed_y
 
-# Проверка столкновения мяча и ракетки
+    # Проверка столкновения мяча и ракетки
+    if ball_y + ball_radius >= rocket_y and rocket_x <= ball_x <= rocket_x + rocket_width:
+        ball_speed_y = -ball_speed_y
+        pygame.mixer.Sound.play(hit_sound)
+        hits += 1
+
+    # Проверка столкновения с краями экрана
     if ball_x < ball_radius or ball_x > SCREEN_WIDTH - ball_radius:
         ball_speed_x = -ball_speed_x
-        pygame.mixer.Sound.play(hit_sound)
-        hits += 1
+        pygame.mixer.Sound.play(miss_sound)
+
     if ball_y < ball_radius:
         ball_speed_y = -ball_speed_y
-        pygame.mixer.Sound.play(hit_sound)
-        hits += 1
-    if ball_y > SCREEN_HEIGHT - ball_radius:
-        ball_x = SCREEN_WIDTH // 2
+        pygame.mixer.Sound.play(miss_sound)
 
-# Проверка столкновения с краями экрана
-    if ball_y > SCREEN_HEIGHT - ball_radius:
-        ball_speed_y = -ball_speed_y
+    if ball_y > SCREEN_HEIGHT:
+        ball_x = SCREEN_WIDTH // 2
+        ball_y = rocket_y - ball_radius * 2
+        ball_speed_y = random.choice([-1, 1]) * 5
         pygame.mixer.Sound.play(miss_sound)
         misses += 1
-    if ball_x > SCREEN_WIDTH - ball_radius:
-        ball_x = SCREEN_WIDTH // 2
-        ball_y = rocket_y - ball_radius
 
-    # Обновление экрана
-    screen.fill(color)
-    screen.blit(target_img, (target_x, target_y))
+    # Отображение ракетки и мяча
+    pygame.draw.rect(screen, (255, 255, 255), (rocket_x, rocket_y, rocket_width, rocket_height))
+    pygame.draw.circle(screen, (255, 255, 255), (int(ball_x), int(ball_y)), ball_radius)
 
     # Отображение счётчиков
     hits_text = font.render(f'Попадания: {hits}', True, (255, 255, 255))
@@ -93,7 +90,7 @@ ball_y = ball_y + ball_speed_y
     screen.blit(hits_text, (10, 10))
     screen.blit(misses_text, (10, 50))
 
-    pygame.display.update()
-
+    pygame.display.flip()
+    clock.tick(fps)
 
 pygame.quit()

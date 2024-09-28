@@ -32,6 +32,11 @@ class Rocket:
             self.x -= self.speed
         if keys[pygame.K_RIGHT] and self.x < SCREEN_WIDTH - self.width:
             self.x += self.speed
+        # Управление скоростью ракетки
+        if keys[pygame.K_UP]:
+            self.speed = min(self.speed + 1, 20)  # Увеличение скорости
+        if keys[pygame.K_DOWN]:
+            self.speed = max(self.speed - 1, 1)   # Уменьшение скорости
 
     def draw(self):
         pygame.draw.rect(screen, (255, 255, 255), (self.x, self.y, self.width, self.height))
@@ -49,21 +54,21 @@ class Ball:
         self.y += self.speed_y
 
     def check_collision(self):
-        global hits, misses
+        global hits, misses, background_color
         # Столкновение с ракеткой
         if self.y + self.radius >= rocket.y and rocket.x <= self.x <= rocket.x + rocket.width:
             self.speed_y = -self.speed_y
             pygame.mixer.Sound.play(hit_sound)
             hits += 1
+            # Изменение цвета фона при успешном попадании
+            background_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
         # Столкновение с краями экрана
         if self.x < self.radius or self.x > SCREEN_WIDTH - self.radius:
             self.speed_x = -self.speed_x
-            pygame.mixer.Sound.play(miss_sound)
 
         if self.y < self.radius:
             self.speed_y = -self.speed_y
-            pygame.mixer.Sound.play(miss_sound)
 
         if self.y > SCREEN_HEIGHT:
             self.x = SCREEN_WIDTH // 2
@@ -80,8 +85,9 @@ class Game:
         self.running = True
 
     def run(self):
+        global background_color
         while self.running:
-            screen.fill((random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)))
+            screen.fill(background_color)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
@@ -104,14 +110,29 @@ class Game:
             clock.tick(fps)
 
             # Завершение игры при достижении 50 попаданий или промахов
-            if hits >= 50 or misses >= 50:
+            if hits >= 25 or misses >= 25:
                 self.running = False
+
+        # Показ сообщения об окончании игры
+        self.show_game_over()
+
+    def show_game_over(self):
+        screen.fill((0, 0, 0))
+        game_over_text = font.render("Игра окончена", True, (255, 255, 255))
+        score_text = font.render(f"Счет {hits} : {misses}", True, (255, 255, 255))
+        screen.blit(game_over_text, (SCREEN_WIDTH // 2 - game_over_text.get_width() // 2, SCREEN_HEIGHT // 2 - 50))
+        screen.blit(score_text, (SCREEN_WIDTH // 2 - score_text.get_width() // 2, SCREEN_HEIGHT // 2))
+        pygame.display.flip()
+        pygame.time.wait(5000)  # Пауза на 5 секунд
 
 
 # Инициализация объектов
 rocket = Rocket()
 ball = Ball()
 game = Game()
+
+# Начальный цвет фона
+background_color = (0, 0, 0)
 
 # Счетчик попаданий и промахов
 hits = 0
